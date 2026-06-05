@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QIIAHSD Criança - Relato dos Professores</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --line: #dfe6ef;
+      --text: #111827;
+      --muted: #64748b;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --danger: #b91c1c;
+      --warn: #a16207;
+      --ok: #047857;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 18px;
+    }
+    body:not(.ok) #formCard { display: none; }
+    .wrap { width: 100%; max-width: 980px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(20px, 3vw, 28px); line-height: 1.2; }
+    h2 { margin: 24px 0 10px; font-size: 18px; }
+    h3 { margin: 0 0 8px; font-size: 15px; }
+    .muted { color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .status {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      background: #fff;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .status.loading { background: #f8fafc; color: #334155; }
+    .status.ok { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .status.err { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .status.warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      margin: 0 6px 6px 0;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+    }
+    form { display: grid; gap: 12px; margin-top: 14px; }
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: 8px;
+    }
+    .row {
+      display: grid;
+      gap: 9px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      scroll-margin-top: 16px;
+    }
+    .row.invalid { border-color: rgba(185, 28, 28, 0.65); background: #fff7f7; }
+    .field-label { font-weight: 700; font-size: 14px; line-height: 1.45; }
+    .choice-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+    }
+    .choice-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 9px 10px;
+      cursor: pointer;
+      line-height: 1.25;
+    }
+    .choice-item:hover { border-color: #b6c2d1; background: #f1f5f9; }
+    .choice-item input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--primary); }
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #5eead4;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 13px 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: var(--primary-dark); }
+    button:disabled { opacity: .65; cursor: not-allowed; }
+    #summaryBox {
+      display: none;
+      border: 1px solid #99f6e4;
+      background: #f0fdfa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      .card { padding: 14px; }
+      .grid2 { grid-template-columns: 1fr; }
+      .choice-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="status" class="status loading">Validando acesso ao formulário...</div>
+    <div id="formCard" class="card">
+      <h1>Questionário para Identificar Indicadores de Altas Habilidades/Superdotação - Relato dos Professores</h1>
+      <p class="muted">Responda considerando o comportamento do(a) aluno(a) em sala de aula, atividades avaliativas, trabalhos em grupo, participação oral, resolução de problemas, projetos e interação com colegas.</p>
+      <div id="metaInfo"></div>
+      <div id="summaryBox"></div>
+      <form id="testForm" novalidate></form>
+    </div>
+  </div>
+
+  <script>
+const FORM_CONFIG = {
+  "code": "QIIAHSD_PROFESSORES_DE_CRIANCA_V2",
+  "title": "QIIAHSD Criança - Relato dos Professores",
+  "heading": "Questionário para Identificar Indicadores de Altas Habilidades/Superdotação - Relato dos Professores",
+  "instruction": "Responda considerando o comportamento do(a) aluno(a) em sala de aula, atividades avaliativas, trabalhos em grupo, participação oral, resolução de problemas, projetos e interação com colegas.",
+  "allowNotObserved": true,
+  "mainItems": [
+    "O(a) aluno(a) compreende conteúdos complexos com facilidade quando se interessa pelo tema.",
+    "Aprende novos conteúdos mais rápido do que a maioria dos colegas.",
+    "Percebe relações entre conteúdos, disciplinas ou situações que os colegas geralmente não percebem.",
+    "Explica ideias difíceis usando exemplos próprios.",
+    "Demonstra vocabulário, raciocínio ou conhecimento acima do esperado para a faixa escolar.",
+    "Lembra com facilidade de informações relacionadas a temas de interesse.",
+    "Busca aprender além do que foi ensinado formalmente.",
+    "Demonstra curiosidade intensa por determinados temas.",
+    "Aprofunda conteúdos além do solicitado em sala.",
+    "Prefere desafios a tarefas fáceis, repetitivas ou mecânicas.",
+    "Faz perguntas elaboradas, críticas ou incomuns para a idade/série.",
+    "Mostra tédio, desmotivação ou queda de engajamento quando a atividade é simples demais.",
+    "Cria soluções diferentes para problemas escolares.",
+    "Questiona regras, instruções ou métodos quando não percebe lógica neles.",
+    "Enxerga várias possibilidades para uma mesma questão.",
+    "Combina conhecimentos de diferentes conteúdos para construir respostas ou soluções.",
+    "Apresenta ideias originais em atividades, discussões ou produções.",
+    "Muda de estratégia quando o método habitual não funciona.",
+    "Persiste quando a atividade desperta interesse ou desafio real.",
+    "Envolve-se profundamente em temas, projetos ou atividades de interesse.",
+    "Busca qualidade elevada nas tarefas que considera importantes.",
+    "Procura informações extras ou amplia o conteúdo apresentado.",
+    "Organiza etapas quando precisa realizar um projeto ou resolver uma tarefa complexa.",
+    "Mantém esforço diante de obstáculos quando a atividade faz sentido para ele(a).",
+    "Ajuda colegas a compreenderem conteúdos ou resolverem dificuldades.",
+    "Influencia ideias ou decisões do grupo por meio de argumentos.",
+    "Percebe erros, incoerências ou possibilidades de melhora antes dos colegas.",
+    "Assume iniciativa em atividades, discussões ou resolução de problemas.",
+    "Propõe caminhos práticos diante de conflitos ou dificuldades em grupo.",
+    "É reconhecido(a) por colegas ou professores como referência em algum conteúdo ou habilidade."
+  ],
+  "modItems": [
+    "Demonstra incômodo intenso com injustiças, incoerências ou regras percebidas como sem sentido.",
+    "Parece sentir-se diferente dos colegas pela forma como pensa, aprende ou se interessa pelos conteúdos.",
+    "Prefere interagir com colegas mais velhos, adultos ou alunos com interesses semelhantes.",
+    "Fica frustrado(a) quando precisa acompanhar ritmo mais lento da turma.",
+    "Apresenta autocrítica, perfeccionismo ou sofrimento intenso diante de erro ou desempenho abaixo do esperado.",
+    "Às vezes esconde capacidades, reduz participação ou evita se destacar para se adaptar ao grupo."
+  ],
+  "openQuestions": [
+    "Em quais conteúdos ou atividades o(a) aluno(a) se destaca?",
+    "Que exemplos concretos foram observados em sala?",
+    "O(a) aluno(a) aprende mais rápido que os colegas? Em quê?",
+    "Faz perguntas acima do esperado para a série?",
+    "Demonstra criatividade nas respostas, projetos ou resolução de problemas?",
+    "Mostra tédio, desmotivação ou comportamento inadequado quando a tarefa é fácil?",
+    "Ajuda colegas ou assume papel de referência em algum tema?",
+    "O desempenho escolar representa fielmente o potencial observado?"
+  ],
+  "scaleLabels": [
+    "0 - Nunca ou quase nunca",
+    "1 - Raramente",
+    "2 - Às vezes",
+    "3 - Frequentemente",
+    "4 - Quase sempre"
+  ],
+  "areaOptions": [
+    "Linguagem, leitura e escrita",
+    "Raciocínio lógico-matemático",
+    "Ciências, investigação e pesquisa",
+    "Tecnologia, programação ou sistemas",
+    "Artes visuais, desenho, design ou criação estética",
+    "Música, ritmo ou percepção sonora",
+    "Corpo, movimento, esporte ou coordenação motora",
+    "Liderança, argumentação ou influência social",
+    "Sensibilidade interpessoal ou compreensão emocional",
+    "Criatividade prática e resolução de problemas cotidianos",
+    "Memória, conhecimentos gerais ou temas específicos",
+    "Filosofia, história, política, estratégia ou pensamento abstrato"
+  ]
+};
+const SUPABASE_URL = "https://ydypdeafbcdcamwigjuq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_lg9teAniku65cd2dnZJvIQ_Zii0XneZ";
+const AREA_PACIENTE_URL = "https://integradaneuropsicologia.github.io/area-do-paciente-v2/";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let patient = null;
+let currentCPF = "";
+
+const BLOCKS = [
+  { key: "habilidade", label: "A - Habilidade acima da média", start: 1, end: 6, highMeaning: "Facilidade cognitiva, aprendizagem rápida, raciocínio, linguagem, memória ou domínio específico acima do esperado." },
+  { key: "aprendizagem", label: "B - Aprendizagem autônoma e profundidade", start: 7, end: 12, highMeaning: "Curiosidade, profundidade, autodidatismo, busca por desafio e necessidade de complexidade." },
+  { key: "criatividade", label: "C - Criatividade", start: 13, end: 18, highMeaning: "Pensamento original, soluções alternativas, flexibilidade, combinação de ideias e questionamento produtivo." },
+  { key: "comprometimento", label: "D - Comprometimento com a tarefa", start: 19, end: 24, highMeaning: "Persistência, dedicação, busca de qualidade, envolvimento intenso e motivação intrínseca." },
+  { key: "lideranca", label: "E - Liderança, influência e resolução social", start: 25, end: 30, highMeaning: "Capacidade de orientar, influenciar, organizar, perceber problemas e atuar como referência." }
+];
+
+const TOTAL_RANGES = [
+  { min: 0, max: 35, label: "Baixa presença de indicadores", interpretation: "Poucos sinais consistentes de AH/SD no questionário. Não sustenta hipótese por si só." },
+  { min: 36, max: 59, label: "Indicadores discretos ou contextuais", interpretation: "Há algumas características, mas ainda dispersas. Pode haver interesse específico, bom desempenho pontual ou oportunidade limitada de expressão." },
+  { min: 60, max: 83, label: "Indicadores moderados", interpretation: "Perfil com sinais relevantes. Merece investigação clínica, principalmente se houver histórico de precocidade, desempenho diferenciado ou produção em área específica." },
+  { min: 84, max: 101, label: "Indicadores altos", interpretation: "Perfil fortemente sugestivo de potencial elevado, especialmente se habilidade, criatividade e comprometimento também estiverem altos." },
+  { min: 102, max: 120, label: "Indicadores muito altos", interpretation: "Perfil muito sugestivo de AH/SD, desde que haja coerência com exemplos reais, história de desenvolvimento, desempenho funcional e outras fontes." }
+];
+
+const BLOCK_RANGES = [
+  { min: 0, max: 7, label: "Baixo" },
+  { min: 8, max: 13, label: "Leve/contextual" },
+  { min: 14, max: 18, label: "Moderado" },
+  { min: 19, max: 22, label: "Alto" },
+  { min: 23, max: 24, label: "Muito alto" }
+];
+
+const MOD_RANGES = [
+  { min: 0, max: 7, label: "Baixo impacto modulador", interpretation: "Poucos sinais de sofrimento, camuflagem ou assincronia associados ao potencial." },
+  { min: 8, max: 13, label: "Impacto moderado", interpretation: "Pode haver sensibilidade, frustração, tédio ou autocrítica interferindo na expressão do potencial." },
+  { min: 14, max: 18, label: "Impacto alto", interpretation: "Há sinais importantes de custo emocional, camuflagem, perfeccionismo ou dificuldade de adaptação." },
+  { min: 19, max: 24, label: "Impacto muito alto", interpretation: "O potencial pode estar sendo expressado com sofrimento, isolamento, oposição, queda de rendimento ou tentativa de se esconder." }
+];
+
+function $(id) { return document.getElementById(id); }
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+function setStatus(text, kind = "loading") {
+  const el = $("status");
+  el.textContent = text;
+  el.className = "status " + kind;
+}
+function normalizeCPF(cpf) { return String(cpf || "").replace(/\D/g, ""); }
+function getTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return String(params.get("token") || params.get("t") || "").trim();
+}
+function getCpfFromUrl() {
+  if (window.__patientFormAccess?.cpf) return normalizeCPF(window.__patientFormAccess.cpf);
+  const params = new URLSearchParams(window.location.search);
+  const legacyCpf = params.get("cpf");
+  if (legacyCpf) return normalizeCPF(legacyCpf);
+  const raw = window.location.search.replace("?", "").trim();
+  if (/^\d{11}$/.test(raw)) return raw;
+  return "";
+}
+function getTestCodeFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("form") || params.get("code") || FORM_CONFIG.code;
+}
+function redirectToAreaPaciente(cpf) {
+  const token = getTokenFromUrl();
+  if (token) {
+    window.location.href = AREA_PACIENTE_URL + "?token=" + encodeURIComponent(token);
+    return;
+  }
+  const cpfDestino = normalizeCPF(cpf || getCpfFromUrl());
+  window.location.href = cpfDestino ? AREA_PACIENTE_URL + "?" + cpfDestino : AREA_PACIENTE_URL;
+}
+function isObject(v) { return v && typeof v === "object" && !Array.isArray(v); }
+function containsTestCode(jsonb, testCode) {
+  if (!jsonb) return false;
+  if (typeof jsonb === "string") return jsonb === testCode;
+  if (Array.isArray(jsonb)) {
+    return jsonb.some(item => {
+      if (typeof item === "string") return item === testCode;
+      if (isObject(item)) return item.code === testCode || item.test_code === testCode || item.id === testCode || containsTestCode(item, testCode);
+      return false;
+    });
+  }
+  if (isObject(jsonb)) {
+    if (Object.prototype.hasOwnProperty.call(jsonb, testCode)) {
+      const value = jsonb[testCode];
+      return value !== false && value !== null && value !== undefined;
+    }
+    if (jsonb.code === testCode || jsonb.test_code === testCode || jsonb.id === testCode) return true;
+    return Object.values(jsonb).some(v => containsTestCode(v, testCode));
+  }
+  return false;
+}
+function isTestLiberado(testsLiberados, testCode) {
+  if (!containsTestCode(testsLiberados, testCode)) return false;
+  if (isObject(testsLiberados) && Object.prototype.hasOwnProperty.call(testsLiberados, testCode)) {
+    const v = testsLiberados[testCode];
+    if (typeof v === "boolean") return v;
+    if (isObject(v) && "liberado" in v) return Boolean(v.liberado);
+    if (typeof v === "string") return !["false", "0", "nao", "não"].includes(v.toLowerCase());
+    return Boolean(v);
+  }
+  return true;
+}
+function isTestFeito(testsFeitos, testCode) {
+  if (!containsTestCode(testsFeitos, testCode)) return false;
+  if (isObject(testsFeitos) && Object.prototype.hasOwnProperty.call(testsFeitos, testCode)) {
+    const v = testsFeitos[testCode];
+    if (typeof v === "boolean") return v;
+    if (isObject(v) && "feito" in v) return Boolean(v.feito);
+    if (typeof v === "string") return !["false", "0", "nao", "não"].includes(v.toLowerCase());
+    return Boolean(v);
+  }
+  return true;
+}
+function normalizeTestsFeitosForSave(current) {
+  const out = {};
+  if (!current) return out;
+  if (typeof current === "string") {
+    out[current] = { feito: true };
+    return out;
+  }
+  if (Array.isArray(current)) {
+    current.forEach(item => {
+      if (typeof item === "string") out[item] = { feito: true };
+      else if (isObject(item)) {
+        const code = item.code || item.test_code || item.id;
+        if (code) out[code] = { ...item, feito: ("feito" in item) ? Boolean(item.feito) : true };
+      }
+    });
+    return out;
+  }
+  if (isObject(current)) {
+    Object.entries(current).forEach(([key, value]) => {
+      if (typeof value === "boolean") out[key] = { feito: value };
+      else if (typeof value === "string") out[key] = { feito: !["false", "0", "nao", "não"].includes(value.toLowerCase()) };
+      else if (isObject(value)) out[key] = { ...value };
+      else out[key] = { feito: Boolean(value) };
+    });
+  }
+  return out;
+}
+function buildUpdatedTestsFeitos(currentTestsFeitos, testCode, submittedAtIso) {
+  const next = normalizeTestsFeitosForSave(currentTestsFeitos);
+  next[testCode] = { ...(isObject(next[testCode]) ? next[testCode] : {}), feito: true, submitted_at: submittedAtIso };
+  return next;
+}
+async function getPatientFormAccessByToken() {
+  const token = getTokenFromUrl();
+  const testCode = getTestCodeFromUrl();
+  if (!token || !testCode) return { data: null, error: new Error("Link inválido ou formulário não informado.") };
+  if (window.__patientFormAccess && window.__patientFormAccess.form_code === testCode) return { data: window.__patientFormAccess, error: null };
+  if (!window.__patientFormAccessPromise) {
+    window.__patientFormAccessPromise = supabaseClient.rpc("get_public_patient_form_access", {
+      p_token: token,
+      p_form_code: testCode
+    }).then(({ data, error }) => {
+      if (error) return { data: null, error };
+      const row = Array.isArray(data) ? data[0] : data;
+      window.__patientFormAccess = row || null;
+      return { data: row || null, error: null };
+    });
+  }
+  return window.__patientFormAccessPromise;
+}
+function installPatientTokenAccessShim() {
+  if (!supabaseClient || supabaseClient.__patientTokenAccessShim) return;
+  const originalFrom = supabaseClient.from.bind(supabaseClient);
+  supabaseClient.from = function(table) {
+    if (table !== "patients") return originalFrom(table);
+    const selectBuilder = {
+      select() { return this; },
+      eq() { return this; },
+      in() { return this; },
+      limit() { return this; },
+      order() { return this; },
+      maybeSingle() { return getPatientFormAccessByToken(); },
+      single() { return getPatientFormAccessByToken(); },
+      async then(resolve, reject) {
+        try {
+          const result = await getPatientFormAccessByToken();
+          return resolve(result);
+        } catch (err) {
+          if (reject) return reject(err);
+          throw err;
+        }
+      }
+    };
+    return {
+      select() { return selectBuilder; },
+      update() { return { eq: async () => ({ data: null, error: null }) }; }
+    };
+  };
+  supabaseClient.__patientTokenAccessShim = true;
+}
+async function validarAcessoAoTeste() {
+  const token = getTokenFromUrl();
+  const cpf = getCpfFromUrl();
+  const testCode = getTestCodeFromUrl();
+  let data = null;
+  let error = null;
+  if (token) {
+    installPatientTokenAccessShim();
+    ({ data, error } = await getPatientFormAccessByToken());
+  } else {
+    if (!cpf || cpf.length !== 11) throw new Error("Link inválido ou expirado. Abra o formulário pela área do paciente.");
+    ({ data, error } = await supabaseClient.from("patients").select("cpf, nome, tests_liberados, tests_feitos").eq("cpf", cpf).maybeSingle());
+  }
+  if (error) {
+    console.error(error);
+    throw new Error("Erro ao consultar a base de dados.");
+  }
+  if (!data) throw new Error("Paciente não encontrado.");
+  if (!isTestLiberado(data.tests_liberados, testCode)) throw new Error("Teste não liberado.");
+  if (isTestFeito(data.tests_feitos, testCode)) {
+    redirectToAreaPaciente(data.cpf || cpf);
+    return null;
+  }
+  return data;
+}
+
+function fieldName(prefix, n) { return prefix + "_" + String(n).padStart(2, "0"); }
+function createRadioGroup(name, options, required) {
+  const group = document.createElement("div");
+  group.className = "choice-group";
+  options.forEach((opt, index) => {
+    const id = name + "_" + index;
+    const wrap = document.createElement("label");
+    wrap.className = "choice-item";
+    wrap.setAttribute("for", id);
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = name;
+    input.id = id;
+    input.value = opt.value;
+    input.required = !!required && index === 0;
+    const span = document.createElement("span");
+    span.textContent = opt.label;
+    wrap.appendChild(input);
+    wrap.appendChild(span);
+    group.appendChild(wrap);
+  });
+  return group;
+}
+function row(labelText, control, fieldNameValue) {
+  const rowEl = document.createElement("div");
+  rowEl.className = "row";
+  if (fieldNameValue) rowEl.dataset.field = fieldNameValue;
+  const label = document.createElement("div");
+  label.className = "field-label";
+  label.textContent = labelText;
+  rowEl.appendChild(label);
+  rowEl.appendChild(control);
+  return rowEl;
+}
+function scaleOptions() {
+  const opts = FORM_CONFIG.scaleLabels.map((label, index) => ({ value: String(index), label }));
+  if (FORM_CONFIG.allowNotObserved) opts.push({ value: "NO", label: "N/O - Não observado / sem informação suficiente" });
+  return opts;
+}
+function areaRatingOptions() {
+  return [
+    { value: "0", label: "0 - Não aparece" },
+    { value: "1", label: "1 - Aparece pouco" },
+    { value: "2", label: "2 - Aparece moderadamente" },
+    { value: "3", label: "3 - Aparece bastante" },
+    { value: "4", label: "4 - Aparece muito" }
+  ];
+}
+function renderForm() {
+  const form = $("testForm");
+  form.innerHTML = "";
+  $("metaInfo").innerHTML = '<span class="pill">Código: ' + escapeHtml(FORM_CONFIG.code) + '</span><span class="pill">Escala 0 a 4</span>' + (FORM_CONFIG.allowNotObserved ? '<span class="pill">N/O não entra na pontuação</span>' : "");
+
+  const main = document.createElement("div");
+  main.className = "section";
+  main.innerHTML = "<h2>Itens principais</h2><p class='muted'>Some apenas os itens 1 a 30 para a pontuação principal.</p>";
+  form.appendChild(main);
+  FORM_CONFIG.mainItems.forEach((text, index) => {
+    const number = index + 1;
+    const name = fieldName("item", number);
+    form.appendChild(row(number + ". " + text, createRadioGroup(name, scaleOptions(), true), name));
+  });
+
+  const mod = document.createElement("div");
+  mod.className = "section";
+  mod.innerHTML = "<h2>Itens moduladores</h2><p class='muted'>Os itens 31 a 36 não entram na pontuação principal; indicam custo emocional, camuflagem, assincronia e adaptação.</p>";
+  form.appendChild(mod);
+  FORM_CONFIG.modItems.forEach((text, index) => {
+    const number = index + 31;
+    const name = fieldName("mod", number);
+    form.appendChild(row(number + ". " + text, createRadioGroup(name, scaleOptions(), true), name));
+  });
+
+  const open = document.createElement("div");
+  open.className = "section";
+  open.innerHTML = "<h2>Perguntas abertas obrigatórias</h2>";
+  form.appendChild(open);
+  FORM_CONFIG.openQuestions.forEach((text, index) => {
+    const name = fieldName("aberta", index + 1);
+    const textarea = document.createElement("textarea");
+    textarea.name = name;
+    textarea.required = true;
+    form.appendChild(row((index + 1) + ". " + text, textarea, name));
+  });
+
+  const area = document.createElement("div");
+  area.className = "section";
+  area.innerHTML = "<h2>Áreas de expressão do potencial</h2><p class='muted'>Marque onde os indicadores aparecem com mais força.</p>";
+  form.appendChild(area);
+  FORM_CONFIG.areaOptions.forEach((text, index) => {
+    const name = fieldName("area", index + 1);
+    form.appendChild(row(text, createRadioGroup(name, areaRatingOptions(), true), name));
+  });
+
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.id = "submitBtn";
+  button.textContent = "Enviar";
+  form.appendChild(button);
+}
+function formDataToObject(formEl) {
+  const data = new FormData(formEl);
+  const out = {};
+  for (const [key, value] of data.entries()) out[key] = value;
+  return out;
+}
+function scoreValue(value) {
+  if (value === "NO" || value === "" || value === undefined || value === null) return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+function classify(score, ranges) {
+  const found = ranges.find(r => score >= r.min && score <= r.max);
+  return found || ranges[ranges.length - 1];
+}
+function sumRange(answers, prefix, start, end) {
+  let total = 0;
+  let answered = 0;
+  let notObserved = 0;
+  for (let i = start; i <= end; i++) {
+    const raw = answers[fieldName(prefix, i)];
+    if (raw === "NO") {
+      notObserved++;
+      continue;
+    }
+    const value = scoreValue(raw);
+    if (value === null) continue;
+    total += value;
+    answered++;
+  }
+  return { total, answered, notObserved };
+}
+function buildClinicalInterpretation(total, blocks, modulator) {
+  const byKey = {};
+  blocks.forEach(block => { byKey[block.key] = block; });
+  const notes = [];
+  let label = "Perfil pouco sugestivo de AH/SD";
+  let text = "O resultado sugere baixa presença de indicadores consistentes de altas habilidades/superdotação no questionário aplicado. Há características pontuais, mas elas não aparecem de forma suficientemente integrada entre habilidade acima da média, criatividade e comprometimento com a tarefa.";
+
+  if (total >= 102 && byKey.habilidade.total >= 19 && byKey.aprendizagem.total >= 19 && byKey.criatividade.total >= 19 && byKey.comprometimento.total >= 14) {
+    label = "Perfil fortemente sugestivo de AH/SD";
+    text = "O resultado aponta forte presença de indicadores de altas habilidades/superdotação. O padrão sugere funcionamento marcado por aprendizagem rápida, profundidade, criatividade, autonomia intelectual e envolvimento seletivo/intenso em áreas de interesse. A conclusão deve considerar a convergência entre múltiplas fontes e a análise clínica do funcionamento global.";
+  } else if (total >= 84 && byKey.habilidade.total >= 18 && byKey.criatividade.total >= 18 && byKey.comprometimento.total >= 14) {
+    label = "Perfil sugestivo de AH/SD";
+    text = "O resultado é sugestivo de indicadores de altas habilidades/superdotação, especialmente pela combinação entre habilidade acima da média, criatividade e envolvimento em tarefas de interesse. O perfil deve ser integrado a dados de anamnese, histórico escolar/profissional, desempenho cognitivo, produções concretas e relatos de outras fontes.";
+  } else if (total >= 60 || blocks.some(block => block.total >= 23)) {
+    label = "Potencial específico ou contextual";
+    text = "O resultado sugere presença de potencial específico ou contextual, com sinais mais evidentes em determinadas áreas de interesse. O perfil não deve ser interpretado apenas pela média geral, pois há possibilidade de talento localizado, expressão seletiva e influência de fatores emocionais, escolares, familiares ou executivos.";
+  }
+
+  if (byKey.habilidade.total >= 19 && byKey.comprometimento.total <= 13) {
+    notes.push("Há discrepância entre habilidade elevada e comprometimento mais baixo; investigue camuflagem, baixa oportunidade de expressão, ambiente pouco estimulante, dupla excepcionalidade, TDAH, TEA, ansiedade, depressão ou diferença entre capacidade e desempenho real.");
+  }
+  if (modulator.total >= 14) {
+    notes.push("Os itens moduladores sugerem custo emocional, perfeccionismo, sensação de diferença, frustração, camuflagem ou dificuldade de adaptação associados ao potencial.");
+  }
+
+  return { label, interpretation: text, notes };
+}
+function calculateScores(answers) {
+  const blocks = BLOCKS.map(block => {
+    const scored = sumRange(answers, "item", block.start, block.end);
+    const classification = classify(scored.total, BLOCK_RANGES);
+    return { ...block, ...scored, classification: classification.label };
+  });
+  const mainTotal = blocks.reduce((sum, block) => sum + block.total, 0);
+  const mainAnswered = blocks.reduce((sum, block) => sum + block.answered, 0);
+  const mainNotObserved = blocks.reduce((sum, block) => sum + block.notObserved, 0);
+  const totalClassification = classify(mainTotal, TOTAL_RANGES);
+  const modScored = sumRange(answers, "mod", 31, 36);
+  const modClassification = classify(modScored.total, MOD_RANGES);
+  const modulator = { ...modScored, classification: modClassification.label, interpretation: modClassification.interpretation };
+  const clinical = buildClinicalInterpretation(mainTotal, blocks, modulator);
+  const areas = FORM_CONFIG.areaOptions.map((label, index) => {
+    const value = scoreValue(answers[fieldName("area", index + 1)]) || 0;
+    return { label, value };
+  });
+  const strongAreas = areas.filter(area => area.value >= 3);
+
+  return {
+    mainTotal,
+    mainAnswered,
+    mainNotObserved,
+    totalClassification: totalClassification.label,
+    totalInterpretation: totalClassification.interpretation,
+    blocks,
+    modulator,
+    clinical,
+    areas,
+    strongAreas
+  };
+}
+function optionLabelForValue(value) {
+  if (value === "NO") return "N/O - Não observado / sem informação suficiente";
+  const index = Number(value);
+  return FORM_CONFIG.scaleLabels[index] || String(value ?? "");
+}
+function areaLabelForValue(value) {
+  const labels = ["0 - Não aparece", "1 - Aparece pouco", "2 - Aparece moderadamente", "3 - Aparece bastante", "4 - Aparece muito"];
+  return labels[Number(value)] || String(value ?? "");
+}
+function buildReadableResults(answers, scores) {
+  const results = [];
+  FORM_CONFIG.mainItems.forEach((text, index) => {
+    const number = index + 1;
+    const raw = answers[fieldName("item", number)];
+    results.push({ secao: "Itens principais", numero: number, pergunta: text, resposta: optionLabelForValue(raw), pontuacao: scoreValue(raw) });
+  });
+  FORM_CONFIG.modItems.forEach((text, index) => {
+    const number = index + 31;
+    const raw = answers[fieldName("mod", number)];
+    results.push({ secao: "Itens moduladores", numero: number, pergunta: text, resposta: optionLabelForValue(raw), pontuacao: scoreValue(raw) });
+  });
+  FORM_CONFIG.openQuestions.forEach((text, index) => {
+    const raw = answers[fieldName("aberta", index + 1)] || "";
+    results.push({ secao: "Perguntas abertas", numero: index + 1, pergunta: text, resposta: raw });
+  });
+  FORM_CONFIG.areaOptions.forEach((text, index) => {
+    const raw = answers[fieldName("area", index + 1)];
+    results.push({ secao: "Áreas de expressão", numero: index + 1, pergunta: text, resposta: areaLabelForValue(raw), pontuacao: scoreValue(raw) });
+  });
+  results.push({ secao: "Resumo", pergunta: "Pontuação total", resposta: scores.mainTotal });
+  results.push({ secao: "Resumo", pergunta: "Classificação total", resposta: scores.totalClassification });
+  results.push({ secao: "Resumo", pergunta: "Classificação clínica", resposta: scores.clinical.label });
+  return results;
+}
+function buildResultsMeta(scores) {
+  const meta = [
+    { key: "pontuacao_total", label: "Pontuação total", value: scores.mainTotal },
+    { key: "classificacao_total", label: "Classificação total", value: scores.totalClassification },
+    { key: "interpretacao_total", label: "Interpretação total", value: scores.totalInterpretation },
+    { key: "classificacao_clinica", label: "Classificação clínica", value: scores.clinical.label },
+    { key: "interpretacao_clinica", label: "Interpretação clínica", value: scores.clinical.interpretation },
+    { key: "itens_principais_respondidos", label: "Itens principais pontuados", value: scores.mainAnswered },
+    { key: "itens_nao_observados", label: "Itens principais não observados", value: scores.mainNotObserved },
+    { key: "moduladores_total", label: "Pontuação dos moduladores", value: scores.modulator.total },
+    { key: "moduladores_classificacao", label: "Classificação dos moduladores", value: scores.modulator.classification },
+    { key: "moduladores_interpretacao", label: "Interpretação dos moduladores", value: scores.modulator.interpretation },
+    { key: "areas_fortes", label: "Áreas com maior expressão", value: scores.strongAreas.map(area => area.label) }
+  ];
+  scores.blocks.forEach(block => {
+    meta.push({ key: "bloco_" + block.key + "_total", label: block.label + " - pontuação", value: block.total });
+    meta.push({ key: "bloco_" + block.key + "_classificacao", label: block.label + " - classificação", value: block.classification });
+    meta.push({ key: "bloco_" + block.key + "_interpretacao", label: block.label + " - interpretação", value: block.highMeaning });
+  });
+  scores.clinical.notes.forEach((note, index) => {
+    meta.push({ key: "nota_clinica_" + (index + 1), label: "Nota clínica " + (index + 1), value: note });
+  });
+  scores.areas.forEach((area, index) => {
+    meta.push({ key: "area_" + (index + 1), label: area.label, value: area.value });
+  });
+  return meta;
+}
+function showSummary(scores) {
+  const box = $("summaryBox");
+  const blockRows = scores.blocks.map(block => "<li><strong>" + escapeHtml(block.label) + ":</strong> " + block.total + " - " + escapeHtml(block.classification) + "</li>").join("");
+  const areaText = scores.strongAreas.length ? scores.strongAreas.map(area => escapeHtml(area.label)).join(", ") : "Nenhuma área com pontuação 3 ou 4.";
+  box.style.display = "block";
+  box.innerHTML = "<h3>Resumo calculado</h3>" +
+    "<p><strong>Total:</strong> " + scores.mainTotal + " - " + escapeHtml(scores.totalClassification) + "</p>" +
+    "<p><strong>Classificação clínica:</strong> " + escapeHtml(scores.clinical.label) + "</p>" +
+    "<ul>" + blockRows + "</ul>" +
+    "<p><strong>Moduladores:</strong> " + scores.modulator.total + " - " + escapeHtml(scores.modulator.classification) + "</p>" +
+    "<p><strong>Áreas fortes:</strong> " + areaText + "</p>";
+}
+function markInvalidRequired(formEl) {
+  formEl.querySelectorAll(".row.invalid").forEach(row => row.classList.remove("invalid"));
+  const invalid = [];
+  formEl.querySelectorAll("[required]").forEach(el => {
+    if (!el.checkValidity()) {
+      const row = el.closest(".row");
+      if (row && !invalid.includes(row)) invalid.push(row);
+    }
+  });
+  invalid.forEach(row => row.classList.add("invalid"));
+  return invalid;
+}
+async function handleSubmit(event) {
+  event.preventDefault();
+  const formEl = event.currentTarget;
+  const invalidRows = markInvalidRequired(formEl);
+  if (invalidRows.length) {
+    setStatus("Responda todos os campos obrigatórios destacados.", "warn");
+    invalidRows[0].scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  const submitBtn = $("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Enviando...";
+
+  try {
+    const token = getTokenFromUrl();
+    if (token) installPatientTokenAccessShim();
+    const cpf = normalizeCPF(currentCPF || patient?.cpf || getCpfFromUrl());
+    const testCode = getTestCodeFromUrl();
+    const submittedAt = new Date().toISOString();
+    if (!cpf) throw new Error("CPF inválido.");
+    if (!patient) throw new Error("Sessão inválida. Recarregue a página.");
+
+    const answers = formDataToObject(formEl);
+    const scores = calculateScores(answers);
+    showSummary(scores);
+    const resultsPayload = buildReadableResults(answers, scores);
+    const resultsMetaPayload = buildResultsMeta(scores);
+
+    const { data: patientRow, error: patientError } = await supabaseClient
+      .from("patients")
+      .select("cpf, tests_liberados, tests_feitos")
+      .eq("cpf", cpf)
+      .maybeSingle();
+    if (patientError) throw new Error("Erro ao consultar paciente.");
+    if (!patientRow) throw new Error("CPF não encontrado.");
+    if (!isTestLiberado(patientRow.tests_liberados, testCode)) throw new Error("Teste não liberado.");
+    if (isTestFeito(patientRow.tests_feitos, testCode)) {
+      redirectToAreaPaciente(cpf);
+      return;
+    }
+
+    const { error: insertError } = await supabaseClient.from("respostas").insert([{
+      cpf,
+      code: testCode,
+      submitted_at: submittedAt,
+      results: resultsPayload,
+      results_meta: resultsMetaPayload
+    }]);
+    if (insertError) throw new Error(("Erro ao salvar respostas: " + (insertError.message || "") + " " + (insertError.details || "") + " " + (insertError.hint || "")).trim());
+
+    const nextTestsFeitos = buildUpdatedTestsFeitos(patientRow.tests_feitos, testCode, submittedAt);
+    const { error: updateError } = await supabaseClient.from("patients").update({ tests_feitos: nextTestsFeitos }).eq("cpf", cpf);
+    if (updateError) throw new Error("Resposta salva, mas falhou ao marcar teste como feito.");
+
+    setStatus("Respostas enviadas com sucesso. Redirecionando...", "ok");
+    setTimeout(() => redirectToAreaPaciente(cpf), 900);
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Erro ao enviar respostas.", "err");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Tentar enviar novamente";
+  }
+}
+
+(async function boot() {
+  try {
+    renderForm();
+    $("testForm").addEventListener("submit", handleSubmit);
+    const data = await validarAcessoAoTeste();
+    if (!data) return;
+    patient = data;
+    currentCPF = normalizeCPF(data.cpf);
+    document.body.classList.add("ok");
+    setStatus("Acesso validado. Preencha o questionário.", "ok");
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || "Falha ao abrir o formulário.", "err");
+  }
+})();
+  </script>
+</body>
+</html>
