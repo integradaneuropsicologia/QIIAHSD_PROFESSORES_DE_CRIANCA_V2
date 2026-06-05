@@ -215,11 +215,11 @@ const FORM_CONFIG = {
     "O desempenho escolar representa fielmente o potencial observado?"
   ],
   "scaleLabels": [
-    "0 - Nunca ou quase nunca",
-    "1 - Raramente",
-    "2 - Às vezes",
-    "3 - Frequentemente",
-    "4 - Quase sempre"
+    "Nunca ou quase nunca",
+    "Raramente",
+    "Às vezes",
+    "Frequentemente",
+    "Quase sempre"
   ],
   "areaOptions": [
     "Linguagem, leitura e escrita",
@@ -501,11 +501,11 @@ function scaleOptions() {
 }
 function areaRatingOptions() {
   return [
-    { value: "0", label: "0 - Não aparece" },
-    { value: "1", label: "1 - Aparece pouco" },
-    { value: "2", label: "2 - Aparece moderadamente" },
-    { value: "3", label: "3 - Aparece bastante" },
-    { value: "4", label: "4 - Aparece muito" }
+    { value: "0", label: "Não aparece" },
+    { value: "1", label: "Aparece pouco" },
+    { value: "2", label: "Aparece moderadamente" },
+    { value: "3", label: "Aparece bastante" },
+    { value: "4", label: "Aparece muito" }
   ];
 }
 function renderForm() {
@@ -658,7 +658,7 @@ function optionLabelForValue(value) {
   return FORM_CONFIG.scaleLabels[index] || String(value ?? "");
 }
 function areaLabelForValue(value) {
-  const labels = ["0 - Não aparece", "1 - Aparece pouco", "2 - Aparece moderadamente", "3 - Aparece bastante", "4 - Aparece muito"];
+  const labels = ["Não aparece", "Aparece pouco", "Aparece moderadamente", "Aparece bastante", "Aparece muito"];
   return labels[Number(value)] || String(value ?? "");
 }
 function buildReadableResults(answers, scores) {
